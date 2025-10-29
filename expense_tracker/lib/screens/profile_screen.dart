@@ -1,3 +1,4 @@
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -29,6 +30,10 @@ class ProfileScreen extends StatelessWidget {
               leading: Icon(Icons.logout, color: Colors.red),
               title: Text('Logout'),
             ),
+            TextButton(
+                onPressed: () => FirebaseCrashlytics.instance.crash(),
+    child: const Text("Throw Test Exception"),
+              ),
           ],
         ),
       ),

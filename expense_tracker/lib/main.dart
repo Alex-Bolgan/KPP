@@ -8,7 +8,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(); // Ініціалізація Firebase
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
-
+  await FirebaseCrashlytics.instance
+      .setCrashlyticsCollectionEnabled(true);
   runApp(MyApp());
 }
 

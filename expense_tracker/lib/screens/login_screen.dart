@@ -1,7 +1,7 @@
 import 'package:expense_tracker/screens/registration_screen.dart';
 import 'package:expense_tracker/widgets/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:expense_tracker/services/auth_service.dart';
 
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
@@ -11,34 +11,42 @@ class LoginScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  // Instance of AuthService
+  final AuthService _authService = AuthService();
+
   Future<void> _loginWithEmailAndPassword(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Authenticate with Firebase
-        UserCredential userCredential = await FirebaseAuth.instance
-            .signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+        final user = await _authService.loginWithEmailAndPassword(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
         );
 
-        print('Logged in as: ${userCredential.user!.email}');
+        // If the user is null, return
+        if (user == null) return;
+
+        // Check if email is verified
+        bool emailVerified = await _authService.isEmailVerified();
+
+        if (!emailVerified) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please verify your email before logging in.'),
+            ),
+          );
+          return;
+        }
+
+        print('Logged in as: ${user.email}');
 
         // Navigate to BottomNavBar on successful login
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const BottomNavBar()),
         );
-      } on FirebaseAuthException catch (e) {
-        String errorMessage;
-        if (e.code == 'user-not-found') {
-          errorMessage = 'No user found with this email.';
-        } else if (e.code == 'wrong-password') {
-          errorMessage = 'Incorrect password. Please try again.';
-        } else {
-          errorMessage = 'An error occurred. Please try again later.';
-        }
+      } catch (e) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(errorMessage)));
+            .showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -103,7 +111,7 @@ class LoginScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text('Don\'t have an account? Register here'),
+                child: const Text('Don\'t have an account yet? Sign Up'),
               ),
             ],
           ),

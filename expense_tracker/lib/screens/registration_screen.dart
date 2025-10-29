@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:expense_tracker/services/auth_service.dart';
 
 class RegistrationScreen extends StatelessWidget {
   RegistrationScreen({super.key});
@@ -7,36 +7,35 @@ class RegistrationScreen extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
+  // Instance of AuthService
+  final AuthService _authService = AuthService();
 
   Future<void> _registerUser(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Authenticate with Firebase
-        UserCredential userCredential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+        final user = await _authService.registerWithEmailAndPassword(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
         );
 
-        print('User registered: ${userCredential.user!.email}');
+        if (user != null) {
+          // Notify user to verify their email
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Registration successful! Please verify your email before logging in.'),
+            ),
+          );
 
-        // Navigate back to the LoginScreen on successful registration
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Registration successful! Please log in.')));
-
-        Navigator.pop(context);
-      } on FirebaseAuthException catch (e) {
-        String errorMessage;
-        if (e.code == 'email-already-in-use') {
-          errorMessage = 'The email is already in use by another account.';
-        } else if (e.code == 'weak-password') {
-          errorMessage = 'The password provided is too weak.';
-        } else {
-          errorMessage = 'An error occurred. Please try again later.';
+          // Navigate to the LoginScreen
+          Navigator.pop(context);
         }
+      } catch (e) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(errorMessage)));
+            .showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -45,7 +44,7 @@ class RegistrationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Register'),
+        title: const Text('Sign Up'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -108,6 +107,12 @@ class RegistrationScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () => _registerUser(context),
                 child: const Text('Register'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Already have an account? Login'),
               ),
             ],
           ),
