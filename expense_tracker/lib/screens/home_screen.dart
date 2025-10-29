@@ -7,10 +7,22 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.notifications))],
+        backgroundColor: Colors.amber[50],
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        title: const Text(
+          'Home',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications),
+          ),
+        ],
       ),
-      body: Padding(
+      body: Container(
+        color: Colors.amber[50], // Background color
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -21,27 +33,69 @@ class HomeScreen extends StatelessWidget {
             ),
             const Text(
               '\$9400',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildCard('Income', '\$5000', Colors.green),
-                _buildCard('Expenses', '\$1200', Colors.red),
+                _buildCard('Income', '\$5000', const Color.fromARGB(255, 26, 99, 28)),
+                _buildCard('Expenses', '\$1200', const Color.fromARGB(255, 159, 13, 3)),
               ],
             ),
             const SizedBox(height: 32),
-            const Text(
-              'Recent Transactions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Recent Transactions',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    print('See all pressed');
+                  },
+                  child: const Text(
+                    'See All',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Expanded(
               child: ListView(
                 children: [
-                  _buildTransactionTile('Shopping', 'Buy some groceries', '-\$120', Colors.red),
-                  _buildTransactionTile('Food', 'Dinner', '-\$32', Colors.red),
+                  _buildTransactionTile(
+                    title: 'Shopping',
+                    subtitle: 'Buy some groceries',
+                    amount: '-\$120',
+                    color: Colors.red,
+                    icon: Icons.shopping_cart,
+                  ),
+                  _buildTransactionTile(
+                    title: 'Food',
+                    subtitle: 'Dinner',
+                    amount: '-\$32',
+                    color: Colors.orange,
+                    icon: Icons.fastfood,
+                  ),
+                  _buildTransactionTile(
+                    title: 'Salary',
+                    subtitle: 'Monthly income',
+                    amount: '+\$2000',
+                    color: Colors.green,
+                    icon: Icons.attach_money,
+                  ),
                 ],
               ),
             ),
@@ -56,29 +110,59 @@ class HomeScreen extends StatelessWidget {
       width: 150,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: TextStyle(color: color, fontSize: 16)),
-          Text(amount, style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Icon(
+                title == 'Income' ? Icons.arrow_upward : Icons.arrow_downward,
+                color: color,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(color: color, fontSize: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            amount,
+            style: TextStyle(
+              color: color,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTransactionTile(String name, String description, String amount, Color color) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: color.withOpacity(0.1),
-        child: Icon(Icons.shopping_cart, color: color),
-      ),
-      title: Text(name),
-      subtitle: Text(description),
-      trailing: Text(
-        amount,
-        style: TextStyle(color: color, fontWeight: FontWeight.bold),
+  Widget _buildTransactionTile(
+      {required String title,
+      required String subtitle,
+      required String amount,
+      required Color color,
+      required IconData icon}) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withOpacity(0.1),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: Text(
+          amount,
+          style: TextStyle(color: color, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
