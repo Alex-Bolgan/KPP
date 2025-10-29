@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/services/auth_service.dart';
+import 'package:expense_tracker/utilities/app_strings.dart';
 
 class RegistrationScreen extends StatelessWidget {
   RegistrationScreen({super.key});
@@ -44,7 +45,7 @@ class RegistrationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign Up'),
+        title: const Text(AppStrings.registrationTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -56,7 +57,7 @@ class RegistrationScreen extends StatelessWidget {
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: 'Email',
+                  labelText: AppStrings.emailLabel,
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.emailAddress,
@@ -74,14 +75,14 @@ class RegistrationScreen extends StatelessWidget {
                 controller: _passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(
-                  labelText: 'Password',
+                  labelText: AppStrings.passwordLabel,
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a password';
+                    return AppStrings.passwordEmptyError;
                   } else if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
+                    return AppStrings.passwordLengthError;
                   }
                   return null;
                 },
@@ -91,14 +92,14 @@ class RegistrationScreen extends StatelessWidget {
                 controller: _confirmPasswordController,
                 obscureText: true,
                 decoration: const InputDecoration(
-                  labelText: 'Confirm Password',
+                  labelText: AppStrings.confirmPasswordLabel,
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
+                    return AppStrings.passwordEmptyError;
                   } else if (value != _passwordController.text) {
-                    return 'Passwords do not match.';
+                    return AppStrings.confirmPasswordError;
                   }
                   return null;
                 },
@@ -106,13 +107,13 @@ class RegistrationScreen extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => _registerUser(context),
-                child: const Text('Register'),
+                child: const Text(AppStrings.registerButton),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: const Text('Already have an account? Login'),
+                child: const Text(AppStrings.alreadyHaveAccount),
               ),
             ],
           ),

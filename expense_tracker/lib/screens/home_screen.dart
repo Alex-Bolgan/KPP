@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/utilities/app_strings.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -11,7 +12,7 @@ class HomeScreen extends StatelessWidget {
         foregroundColor: Colors.black87,
         elevation: 0,
         title: const Text(
-          'Home',
+          AppStrings.homeTitle,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -28,7 +29,7 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Account Balance',
+              AppStrings.accountBalance,
               style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
             const Text(
@@ -51,7 +52,7 @@ class HomeScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Recent Transactions',
+                  AppStrings.recentTransactions,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -62,7 +63,7 @@ class HomeScreen extends StatelessWidget {
                     print('See all pressed');
                   },
                   child: const Text(
-                    'See All',
+                    AppStrings.seeAll,
                     style: TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.w600,
