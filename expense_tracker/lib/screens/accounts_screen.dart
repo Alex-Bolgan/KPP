@@ -22,7 +22,6 @@ class AccountsScreen extends StatelessWidget {
       body: Column(
         children: [
           Container(
-            color: Colors.purple.withOpacity(0.1),
             padding: const EdgeInsets.all(20),
             width: double.infinity,
             child: Column(

@@ -25,9 +25,10 @@ class CategoriesScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: GridView.builder(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
+            crossAxisCount: 4, // Number of items per row
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
+            childAspectRatio: 0.8, // Adjust this to give more vertical space
           ),
           itemCount: categories.length,
           itemBuilder: (context, index) {
@@ -49,11 +50,16 @@ class CategoriesScreen extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 30,
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withValues(alpha: 0.2),
           child: Icon(icon, color: color),
         ),
         const SizedBox(height: 8),
-        Text(name, style: const TextStyle(fontSize: 14)),
+        Text(
+          name,
+          style: const TextStyle(fontSize: 12), // Adjust font size if needed
+          overflow: TextOverflow.visible, // Ensure text is visible
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
