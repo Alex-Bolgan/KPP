@@ -1,17 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:expense_tracker/screens/account_detail_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/account.dart';
+import '../providers/account_provider.dart';
 
 class AccountsScreen extends StatelessWidget {
-  AccountsScreen({super.key});
-
-  // Hardcoded account data
-  final List<Map<String, dynamic>> accounts = [
-    {'name': 'Wallet', 'balance': '\$400', 'icon': Icons.account_balance_wallet},
-    {'name': 'Card1', 'balance': '\$2000', 'icon': Icons.credit_card},
-  ];
+  const AccountsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final accountProvider = Provider.of<AccountProvider>(context);
+    final accounts = accountProvider.accounts;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Account'),
@@ -22,6 +22,7 @@ class AccountsScreen extends StatelessWidget {
       body: Column(
         children: [
           Container(
+            color: Colors.purple.withOpacity(0.1),
             padding: const EdgeInsets.all(20),
             width: double.infinity,
             child: Column(
@@ -33,7 +34,7 @@ class AccountsScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  '\$2400',
+                  '\$9400',
                   style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -46,10 +47,8 @@ class AccountsScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final account = accounts[index];
                 return _buildAccountTile(
-                  name: account['name'],
-                  balance: account['balance'],
-                  icon: account['icon'],
-                  context: context,
+                  account,
+                  context,
                 );
               },
             ),
@@ -77,23 +76,16 @@ class AccountsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountTile({
-    required String name,
-    required String balance,
-    required IconData icon,
-    required BuildContext context,
-  }) {
+  Widget _buildAccountTile(Account account, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Navigate to account details screen
+        // Use Provider to set the selected account and navigate
+        Provider.of<AccountProvider>(context, listen: false)
+            .selectAccount(account);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AccountDetailScreen(
-              accountName: name,
-              accountBalance: balance,
-              accountIcon: icon,
-            ),
+            builder: (context) => AccountDetailsScreen(account: account),
           ),
         );
       },
@@ -102,15 +94,15 @@ class AccountsScreen extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: ListTile(
           leading: CircleAvatar(
+            backgroundImage: AssetImage(account.icon), // Local image for account
             backgroundColor: Colors.purple.withOpacity(0.1),
-            child: Icon(icon, color: Colors.purple),
           ),
           title: Text(
-            name,
+            account.name,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           trailing: Text(
-            balance,
+            account.balance,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),

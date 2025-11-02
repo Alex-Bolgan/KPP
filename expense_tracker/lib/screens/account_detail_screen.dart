@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
+import '../models/account.dart';
 
-class AccountDetailScreen extends StatelessWidget {
-  final String accountName;
-  final String accountBalance;
-  final IconData accountIcon;
+class AccountDetailsScreen extends StatelessWidget {
+  final Account account;
 
-  AccountDetailScreen({
-    super.key,
-    required this.accountName,
-    required this.accountBalance,
-    required this.accountIcon,
-  });
+  AccountDetailsScreen({super.key, required this.account});
 
-  // Hardcoded transaction data
+  // Hardcoded transaction data for the account
   final List<Map<String, dynamic>> transactions = [
     {
       'title': 'Shopping',
@@ -20,6 +14,7 @@ class AccountDetailScreen extends StatelessWidget {
       'amount': '-\$120',
       'time': '10:00 AM',
       'color': Colors.red,
+      'icon': Icons.shopping_bag,
     },
     {
       'title': 'Food',
@@ -27,6 +22,7 @@ class AccountDetailScreen extends StatelessWidget {
       'amount': '-\$32',
       'time': '07:30 PM',
       'color': Colors.orange,
+      'icon': Icons.fastfood,
     },
     {
       'title': 'Transportation',
@@ -41,7 +37,7 @@ class AccountDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Account Details'),
+        title: Text(account.name),
         actions: [
           IconButton(
             onPressed: () {
@@ -59,11 +55,11 @@ class AccountDetailScreen extends StatelessWidget {
             CircleAvatar(
               backgroundColor: Colors.blue.withOpacity(0.1),
               radius: 50,
-              child: Icon(accountIcon, size: 40, color: Colors.blue),
+              child: Image.asset(account.icon, width: 40),
             ),
             const SizedBox(height: 16),
             Text(
-              accountName,
+              account.name,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -71,7 +67,7 @@ class AccountDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              accountBalance,
+              account.balance,
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -89,7 +85,7 @@ class AccountDetailScreen extends StatelessWidget {
                     child: ListTile(
                       leading: CircleAvatar(
                         backgroundColor: transaction['color'].withOpacity(0.1),
-                        child: Icon(Icons.shopping_bag, color: transaction['color']),
+                        child: Icon(transaction['icon'], color: transaction['color']),
                       ),
                       title: Text(transaction['title']),
                       subtitle: Text(transaction['subtitle']),

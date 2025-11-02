@@ -29,13 +29,23 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
   late String selectedWallet;
   late String description;
 
+  // List of categories
+  final List<String> categories = ['Shopping', 'Food', 'Transport', 'Bills', 'Other'];
+
+  // List of wallets
+  final List<String> wallets = ['Wallet', 'Card1', 'Bank Account'];
+
   @override
   void initState() {
     super.initState();
     // Initialize fields with values passed from the transaction
     selectedDate = widget.date;
-    selectedCategory = widget.category;
-    selectedWallet = widget.wallet;
+    selectedCategory = categories.contains(widget.category)
+        ? widget.category
+        : categories.first; // Set a default category if it doesn't match
+    selectedWallet = wallets.contains(widget.wallet)
+        ? widget.wallet
+        : wallets.first; // Set a default wallet if it doesn't match
     description = widget.description;
   }
 
@@ -118,7 +128,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                       labelText: 'Category',
                       border: OutlineInputBorder(),
                     ),
-                    items: ['Shopping', 'Food', 'Transport', 'Bills', 'Other']
+                    items: categories
                         .map((e) => DropdownMenuItem(
                               value: e,
                               child: Text(e),
@@ -152,7 +162,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                       labelText: 'Wallet',
                       border: OutlineInputBorder(),
                     ),
-                    items: ['Wallet', 'Card1', 'Bank Account']
+                    items: wallets
                         .map((e) => DropdownMenuItem(
                               value: e,
                               child: Text(e),
