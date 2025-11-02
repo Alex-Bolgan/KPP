@@ -7,12 +7,17 @@ class AccountProvider with ChangeNotifier {
     Account(
       name: 'Wallet',
       balance: '\$400',
-      icon: 'assets/icons/wallet.png',
+      icon: Icons.account_balance_wallet,
     ),
     Account(
       name: 'Card1',
       balance: '\$2000',
-      icon: 'assets/icons/card.png',
+      icon: Icons.credit_card,
+    ),
+    Account(
+      name: 'Bank Account',
+      balance: '\$5000',
+      icon: Icons.account_balance,
     ),
   ];
 

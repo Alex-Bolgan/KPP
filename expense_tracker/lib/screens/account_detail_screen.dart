@@ -55,7 +55,7 @@ class AccountDetailsScreen extends StatelessWidget {
             CircleAvatar(
               backgroundColor: Colors.blue.withOpacity(0.1),
               radius: 50,
-              child: Image.asset(account.icon, width: 40),
+              child: Icon(account.icon),
             ),
             const SizedBox(height: 16),
             Text(

@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
+
 class Account {
   final String name;
   final String balance;
-  final String icon;
+  final IconData icon;
 
   Account({
     required this.name,

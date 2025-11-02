@@ -22,7 +22,7 @@ class AccountsScreen extends StatelessWidget {
       body: Column(
         children: [
           Container(
-            color: Colors.purple.withOpacity(0.1),
+            color: Colors.purple.withAlpha(30),
             padding: const EdgeInsets.all(20),
             width: double.infinity,
             child: Column(
@@ -94,8 +94,8 @@ class AccountsScreen extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: ListTile(
           leading: CircleAvatar(
-            backgroundImage: AssetImage(account.icon), // Local image for account
             backgroundColor: Colors.purple.withOpacity(0.1),
+            child: Icon(account.icon, color: Colors.purple),
           ),
           title: Text(
             account.name,
