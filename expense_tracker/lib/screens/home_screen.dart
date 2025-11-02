@@ -1,7 +1,84 @@
+import 'package:expense_tracker/screens/transaction_details_screen.dart';
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final List<String> filterOptions = ['Today', 'Week', 'Month', 'Year'];
+  int selectedFilter = 0; // Selected filter index
+
+  // Hardcoded transaction data
+  final Map<String, List<Map<String, dynamic>>> transactions = {
+    'Today': [
+      {
+        'title': 'Shopping',
+        'subtitle': 'Buy some groceries',
+        'amount': '-\$120',
+        'color': Colors.orange,
+        'icon': Icons.shopping_bag,
+      },
+      {
+        'title': 'Food',
+        'subtitle': 'Dinner',
+        'amount': '-\$32',
+        'color': Colors.red,
+        'icon': Icons.fastfood,
+      },
+    ],
+    'Week': [
+      {
+        'title': 'Salary',
+        'subtitle': 'Monthly income',
+        'amount': '+\$2000',
+        'color': Colors.green,
+        'icon': Icons.attach_money,
+      },
+      {
+        'title': 'Shopping',
+        'subtitle': 'Buy new shoes',
+        'amount': '-\$150',
+        'color': Colors.orange,
+        'icon': Icons.shopping_bag,
+      },
+    ],
+    'Month': [
+      {
+        'title': 'Groceries',
+        'subtitle': 'Supermarket shopping',
+        'amount': '-\$300',
+        'color': Colors.orange,
+        'icon': Icons.shopping_cart,
+      },
+      {
+        'title': 'Rent',
+        'subtitle': 'Monthly house rent',
+        'amount': '-\$800',
+        'color': Colors.red,
+        'icon': Icons.house,
+      },
+    ],
+    'Year': [
+      {
+        'title': 'Bonus',
+        'subtitle': 'Year-end bonus',
+        'amount': '+\$5000',
+        'color': Colors.green,
+        'icon': Icons.money,
+      },
+      {
+        'title': 'Vacation',
+        'subtitle': 'Trip to Hawaii',
+        'amount': '-\$2000',
+        'color': Colors.purple,
+        'icon': Icons.beach_access,
+      },
+    ],
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +123,9 @@ class HomeScreen extends StatelessWidget {
                 _buildCard('Expenses', '\$1200', const Color.fromARGB(255, 159, 13, 3)),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            _buildTransactionFilter(),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -73,34 +152,57 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView(
-                children: [
-                  _buildTransactionTile(
-                    title: 'Shopping',
-                    subtitle: 'Buy some groceries',
-                    amount: '-\$120',
-                    color: Colors.red,
-                    icon: Icons.shopping_cart,
-                  ),
-                  _buildTransactionTile(
-                    title: 'Food',
-                    subtitle: 'Dinner',
-                    amount: '-\$32',
-                    color: Colors.orange,
-                    icon: Icons.fastfood,
-                  ),
-                  _buildTransactionTile(
-                    title: 'Salary',
-                    subtitle: 'Monthly income',
-                    amount: '+\$2000',
-                    color: Colors.green,
-                    icon: Icons.attach_money,
-                  ),
-                ],
+              child: ListView.builder(
+                itemCount: transactions[filterOptions[selectedFilter]]!.length,
+                itemBuilder: (context, index) {
+                  final transaction = transactions[filterOptions[selectedFilter]]![index];
+                  return _buildTransactionTile(
+                    title: transaction['title'],
+                    subtitle: transaction['subtitle'],
+                    amount: transaction['amount'],
+                    color: transaction['color'],
+                    icon: transaction['icon'],
+                  );
+                },
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionFilter() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: List.generate(
+        filterOptions.length,
+        (index) {
+          final isSelected = index == selectedFilter;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedFilter = index;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color.fromARGB(255, 255, 223, 186)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                filterOptions[index],
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.orange : Colors.grey,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -120,12 +222,12 @@ class HomeScreen extends StatelessWidget {
             children: [
               Icon(
                 title == 'Income' ? Icons.arrow_upward : Icons.arrow_downward,
-                color: color,
+                color: const Color.fromARGB(255, 255, 223, 186),
               ),
               const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(color: color, fontSize: 16),
+                style: TextStyle(color:const Color.fromARGB(255, 255, 223, 186), fontSize: 16),
               ),
             ],
           ),
@@ -133,7 +235,7 @@ class HomeScreen extends StatelessWidget {
           Text(
             amount,
             style: TextStyle(
-              color: color,
+              color: const Color.fromARGB(255, 255, 223, 186),
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
@@ -143,13 +245,33 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionTile(
-      {required String title,
-      required String subtitle,
-      required String amount,
-      required Color color,
-      required IconData icon}) {
-    return Card(
+  Widget _buildTransactionTile({
+  required String title,
+  required String subtitle,
+  required String amount,
+  required Color color,
+  required IconData icon,
+}) {
+  return GestureDetector(
+    onTap: () {
+      // Navigate to TransactionDetailsScreen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TransactionDetailsScreen(
+            transactionType: title.contains('Salary') || title.contains('Bonus')
+                ? 'Income'
+                : 'Expense',
+            amount: amount,
+            category: title,
+            description: subtitle,
+            wallet: 'Wallet', // Hardcoded wallet for now
+            date: 'Apr 1, 2025', // Hardcoded date for now
+          ),
+        ),
+      );
+    },
+    child: Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: ListTile(
@@ -164,6 +286,7 @@ class HomeScreen extends StatelessWidget {
           style: TextStyle(color: color, fontWeight: FontWeight.bold),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
