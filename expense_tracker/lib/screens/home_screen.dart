@@ -4,13 +4,25 @@ import 'package:provider/provider.dart';
 import '../models/transaction.dart';
 import 'transaction_details_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final List<String> filterOptions = ["Today", "Week", "Month", "Year"];
+  int selectedFilterIndex = 0; // Default to "Today"
 
   @override
   Widget build(BuildContext context) {
     final transactionProvider = Provider.of<TransactionProvider>(context);
-    final transactions = transactionProvider.transactions;
+
+    // Filter transactions based on the selected filter option
+    final transactions = transactionProvider.getFilteredTransactions(
+      filterOptions[selectedFilterIndex],
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -54,6 +66,8 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
+            _buildFilterRow(),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -103,7 +117,7 @@ class HomeScreen extends StatelessWidget {
       width: 150,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.8),
+        color: color.withAlpha(200),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -112,13 +126,13 @@ class HomeScreen extends StatelessWidget {
           Row(
             children: [
               Icon(
-                title == 'Income' ? Icons.arrow_upward : Icons.arrow_downward,
-                color: const Color.fromARGB(255, 255, 223, 186),
+                title == 'Income' ? Icons.arrow_downward : Icons.arrow_upward,
+                color: Color.fromARGB(255, 255, 255, 255),
               ),
               const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(color: const Color.fromARGB(255, 255, 223, 186), fontSize: 16),
+                style: TextStyle(color: Color.fromARGB(255, 255, 255, 255), fontSize: 16),
               ),
             ],
           ),
@@ -126,12 +140,47 @@ class HomeScreen extends StatelessWidget {
           Text(
             amount,
             style: TextStyle(
-              color: const Color.fromARGB(255, 255, 223, 186),
+              color: Color.fromARGB(255, 255, 255, 255),
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: List.generate(
+        filterOptions.length,
+        (index) {
+          final isSelected = index == selectedFilterIndex;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedFilterIndex = index;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color.fromARGB(255, 255, 223, 186)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                filterOptions[index],
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.orange : Colors.grey,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -171,8 +220,7 @@ class HomeScreen extends StatelessWidget {
           trailing: Text(
             transaction.amount,
             style: TextStyle(
-              color:
-                  transaction.type == 'Income' ? Colors.green : Colors.red,
+              color: transaction.type == 'Income' ? Colors.green : Colors.red,
               fontWeight: FontWeight.bold,
             ),
           ),

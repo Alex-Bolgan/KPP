@@ -22,7 +22,7 @@ class AccountsScreen extends StatelessWidget {
       body: Column(
         children: [
           Container(
-            color: Colors.purple.withAlpha(30),
+            color: const Color.fromARGB(255, 255, 255, 255),
             padding: const EdgeInsets.all(20),
             width: double.infinity,
             child: Column(
@@ -42,15 +42,18 @@ class AccountsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: ListView.builder(
-              itemCount: accounts.length,
-              itemBuilder: (context, index) {
-                final account = accounts[index];
-                return _buildAccountTile(
-                  account,
-                  context,
-                );
-              },
+            child: Center(
+              child: ListView.builder(
+                shrinkWrap: true, // Ensures the list doesn't take up unnecessary space
+                itemCount: accounts.length,
+                itemBuilder: (context, index) {
+                  final account = accounts[index];
+                  return _buildAccountTile(
+                    account,
+                    context,
+                  );
+                },
+              ),
             ),
           ),
           Padding(
@@ -94,7 +97,7 @@ class AccountsScreen extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: Colors.purple.withOpacity(0.1),
+            backgroundColor: Colors.purple.withAlpha(40),
             child: Icon(account.icon, color: Colors.purple),
           ),
           title: Text(

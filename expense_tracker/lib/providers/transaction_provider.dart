@@ -1,5 +1,5 @@
-import 'package:expense_tracker/models/transaction.dart';
 import 'package:flutter/material.dart';
+import '../models/transaction.dart';
 
 class TransactionProvider with ChangeNotifier {
   // Hardcoded transactions
@@ -10,7 +10,7 @@ class TransactionProvider with ChangeNotifier {
       category: 'Shopping',
       description: 'Buy some groceries',
       wallet: 'Wallet',
-      date: 'Apr 1, 2025',
+      date: '2025-10-16',
       icon: Icons.shopping_bag,
     ),
     Transaction(
@@ -19,7 +19,7 @@ class TransactionProvider with ChangeNotifier {
       category: 'Food',
       description: 'Dinner',
       wallet: 'Wallet',
-      date: 'Apr 2, 2025',
+      date: '2025-10-15',
       icon: Icons.fastfood,
     ),
     Transaction(
@@ -28,32 +28,55 @@ class TransactionProvider with ChangeNotifier {
       category: 'Salary',
       description: 'Monthly income',
       wallet: 'Bank Account',
-      date: 'Apr 3, 2025',
-      icon: Icons.money,
+      date: '2025-10-10',
+      icon: Icons.attach_money,
     ),
   ];
-
-  // Getter for transactions
-  List<Transaction> get transactions => [..._transactions];
 
   // Selected transaction
   Transaction? _selectedTransaction;
 
   Transaction? get selectedTransaction => _selectedTransaction;
 
-  // Update the selected transaction
+  // Get all transactions
+  List<Transaction> get transactions => [..._transactions];
+
+  // Filter transactions based on time period
+  List<Transaction> getFilteredTransactions(String filter) {
+    DateTime now = DateTime.now();
+    if (filter == 'Today') {
+      return _transactions.where((transaction) {
+        DateTime transactionDate = DateTime.parse(transaction.date);
+        return transactionDate.day == now.day &&
+            transactionDate.month == now.month &&
+            transactionDate.year == now.year;
+      }).toList();
+    } else if (filter == 'Week') {
+      DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+      DateTime endOfWeek = startOfWeek.add(const Duration(days: 6));
+      return _transactions.where((transaction) {
+        DateTime transactionDate = DateTime.parse(transaction.date);
+        return transactionDate.isAfter(startOfWeek) &&
+            transactionDate.isBefore(endOfWeek);
+      }).toList();
+    } else if (filter == 'Month') {
+      return _transactions.where((transaction) {
+        DateTime transactionDate = DateTime.parse(transaction.date);
+        return transactionDate.month == now.month &&
+            transactionDate.year == now.year;
+      }).toList();
+    } else if (filter == 'Year') {
+      return _transactions.where((transaction) {
+        DateTime transactionDate = DateTime.parse(transaction.date);
+        return transactionDate.year == now.year;
+      }).toList();
+    }
+    return _transactions; // Default case
+  }
+
+  // Select a transaction
   void selectTransaction(Transaction transaction) {
     _selectedTransaction = transaction;
     notifyListeners();
-  }
-
-  // Update a specific transaction (placeholder for saving edits)
-  void updateTransaction(Transaction updatedTransaction) {
-    final index = _transactions.indexOf(_selectedTransaction!);
-    if (index != -1) {
-      _transactions[index] = updatedTransaction;
-      _selectedTransaction = updatedTransaction;
-      notifyListeners();
-    }
   }
 }
