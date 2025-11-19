@@ -1,40 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/account.dart';
+import '../models/transaction.dart';
+import '../providers/transaction_provider.dart';
+import 'transaction_details_screen.dart';
 
 class AccountDetailsScreen extends StatelessWidget {
   final Account account;
 
-  AccountDetailsScreen({super.key, required this.account});
-
-  // Hardcoded transaction data for the account
-  final List<Map<String, dynamic>> transactions = [
-    {
-      'title': 'Shopping',
-      'subtitle': 'Buy some groceries',
-      'amount': '-\$120',
-      'time': '10:00 AM',
-      'color': Colors.red,
-      'icon': Icons.shopping_bag,
-    },
-    {
-      'title': 'Food',
-      'subtitle': 'Buy a ramen',
-      'amount': '-\$32',
-      'time': '07:30 PM',
-      'color': Colors.orange,
-      'icon': Icons.fastfood,
-    },
-    {
-      'title': 'Transportation',
-      'subtitle': 'Charging Tesla',
-      'amount': '-\$18',
-      'time': '02:30 PM',
-      'color': Colors.blue,
-    },
-  ];
+  const AccountDetailsScreen({super.key, required this.account});
 
   @override
   Widget build(BuildContext context) {
+    final transactionProvider = Provider.of<TransactionProvider>(context);
+
+    // Filter transactions that belong to the account
+    final transactions = transactionProvider.transactions;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(account.name),
@@ -53,9 +35,9 @@ class AccountDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CircleAvatar(
-              backgroundColor: Colors.blue.withOpacity(0.1),
+              backgroundColor: Colors.blue.withAlpha(20),
               radius: 50,
-              child: Icon(account.icon),
+              child: Icon(account.icon, size: 40, color: Colors.blue),
             ),
             const SizedBox(height: 16),
             Text(
@@ -79,38 +61,53 @@ class AccountDetailsScreen extends StatelessWidget {
                 itemCount: transactions.length,
                 itemBuilder: (context, index) {
                   final transaction = transactions[index];
-                  return Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: transaction['color'].withOpacity(0.1),
-                        child: Icon(transaction['icon'], color: transaction['color']),
-                      ),
-                      title: Text(transaction['title']),
-                      subtitle: Text(transaction['subtitle']),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            transaction['amount'],
-                            style: TextStyle(
-                              color: transaction['color'],
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            transaction['time'],
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
+                  return _buildTransactionTile(transaction, context);
                 },
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionTile(Transaction transaction, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Access the provider safely and navigate to TransactionDetailsScreen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TransactionDetailsScreen(
+                transactionType: transaction.type,
+                amount: transaction.amount,
+                category: transaction.category,
+                description: transaction.description,
+                wallet: transaction.wallet,
+                date: transaction.date,
+              ),
+            ),
+          );
+      },
+      child: Card(
+        elevation: 2,
+        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: transaction.type == 'Income'
+                ? Colors.green.withAlpha(20)
+                : Colors.red.withAlpha(20),
+            child: Icon(transaction.icon, color: transaction.type == 'Income' ? Colors.green : Colors.red),
+          ),
+          title: Text(transaction.category),
+          subtitle: Text(transaction.description),
+          trailing: Text(
+            transaction.amount,
+            style: TextStyle(
+              color: transaction.type == 'Income' ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
     );
