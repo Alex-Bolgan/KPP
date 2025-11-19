@@ -88,8 +88,8 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
       ),
       body: Container(
         color: widget.transactionType == 'Income'
-            ? Colors.green.withOpacity(0.1)
-            : Colors.red.withOpacity(0.1),
+            ? Colors.green.withAlpha(240)
+            : Colors.red.withAlpha(240),
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,

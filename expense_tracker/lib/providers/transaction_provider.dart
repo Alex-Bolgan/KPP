@@ -10,7 +10,7 @@ class TransactionProvider with ChangeNotifier {
       category: 'Shopping',
       description: 'Buy some groceries',
       wallet: 'Wallet',
-      date: '2025-10-16',
+      date: '2025-11-10',
       icon: Icons.shopping_bag,
     ),
     Transaction(

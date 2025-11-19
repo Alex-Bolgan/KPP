@@ -13,8 +13,7 @@ class AccountDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final transactionProvider = Provider.of<TransactionProvider>(context);
-
-    // Filter transactions that belong to the account
+    
     final transactions = transactionProvider.transactions;
 
     return Scaffold(
@@ -74,7 +73,6 @@ class AccountDetailsScreen extends StatelessWidget {
   Widget _buildTransactionTile(Transaction transaction, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Access the provider safely and navigate to TransactionDetailsScreen
           Navigator.push(
             context,
             MaterialPageRoute(

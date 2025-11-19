@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTransactionTile(Transaction transaction, BuildContext context, IconData icon) {
     return GestureDetector(
-      onTap: () {
+      onTap: () { try {
         // Use Provider to set the selected transaction and navigate
         Provider.of<TransactionProvider>(context, listen: false)
             .selectTransaction(transaction);
@@ -204,6 +204,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
+      } catch (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to open transaction details: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       },
       child: Card(
         elevation: 2,
