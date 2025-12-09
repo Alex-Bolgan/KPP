@@ -82,7 +82,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
         description: description,
         accountName: wallet,
         date: DateTime.parse(selectedDate),
-        icon: category, accountId: accountId, userId: '',
+        icon: category, accountId: accountId, userId: FirebaseAuth.instance.currentUser!.uid,
       );
 
       await _repository.updateTransaction(transaction);
