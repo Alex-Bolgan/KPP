@@ -1,82 +1,62 @@
+import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:flutter/material.dart';
 import '../models/transaction.dart';
 
 class TransactionProvider with ChangeNotifier {
-  // Hardcoded transactions
-  final List<Transaction> _transactions = [
-    Transaction(
-      type: 'Expense',
-      amount: '-\$120',
-      category: 'Shopping',
-      description: 'Buy some groceries',
-      wallet: 'Wallet',
-      date: '2025-11-10',
-      icon: Icons.shopping_bag,
-    ),
-    Transaction(
-      type: 'Expense',
-      amount: '-\$32',
-      category: 'Food',
-      description: 'Dinner',
-      wallet: 'Wallet',
-      date: '2025-10-15',
-      icon: Icons.fastfood,
-    ),
-    Transaction(
-      type: 'Income',
-      amount: '+\$2000',
-      category: 'Salary',
-      description: 'Monthly income',
-      wallet: 'Bank Account',
-      date: '2025-10-10',
-      icon: Icons.attach_money,
-    ),
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Selected transaction
-  Transaction? _selectedTransaction;
+  // List to store transactions locally after fetching from Firestore
+  List<Transaction> _transactions = [];
 
-  Transaction? get selectedTransaction => _selectedTransaction;
+  List<Transaction> get transactions => _transactions;
 
-  // Get all transactions
-  List<Transaction> get transactions => [..._transactions];
-
-  // Filter transactions based on time period
-  List<Transaction> getFilteredTransactions(String filter) {
-    DateTime now = DateTime.now();
-    if (filter == 'Today') {
-      return _transactions.where((transaction) {
-        DateTime transactionDate = DateTime.parse(transaction.date);
-        return transactionDate.day == now.day &&
-            transactionDate.month == now.month &&
-            transactionDate.year == now.year;
+  // Fetch all transactions from Firestore
+  Future<void> fetchTransactions() async {
+    try {
+      final snapshot = await _firestore.collection('transactions').get();
+      _transactions = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Transaction.fromFirestore(data);
       }).toList();
-    } else if (filter == 'Week') {
-      DateTime startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      DateTime endOfWeek = startOfWeek.add(const Duration(days: 6));
-      return _transactions.where((transaction) {
-        DateTime transactionDate = DateTime.parse(transaction.date);
-        return transactionDate.isAfter(startOfWeek) &&
-            transactionDate.isBefore(endOfWeek);
-      }).toList();
-    } else if (filter == 'Month') {
-      return _transactions.where((transaction) {
-        DateTime transactionDate = DateTime.parse(transaction.date);
-        return transactionDate.month == now.month &&
-            transactionDate.year == now.year;
-      }).toList();
-    } else if (filter == 'Year') {
-      return _transactions.where((transaction) {
-        DateTime transactionDate = DateTime.parse(transaction.date);
-        return transactionDate.year == now.year;
-      }).toList();
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching transactions: $e');
     }
-    return _transactions; // Default case
   }
 
-  // Select a transaction
-  void selectTransaction(Transaction transaction) {
-    _selectedTransaction = transaction;
-    notifyListeners();
+  // Add a new transaction to Firestore
+  Future<void> addTransaction(Transaction transaction) async {
+    try {
+      await _firestore.collection('transactions').doc(transaction.id).set(transaction.toFirestore());
+      _transactions.add(transaction);
+      notifyListeners();
+    } catch (e) {
+      print('Error adding transaction: $e');
+    }
+  }
+
+  // Update an existing transaction in Firestore
+  Future<void> updateTransaction(Transaction transaction) async {
+    try {
+      await _firestore.collection('transactions').doc(transaction.id).update(transaction.toFirestore());
+      final index = _transactions.indexWhere((t) => t.id == transaction.id);
+      if (index != -1) {
+        _transactions[index] = transaction;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error updating transaction: $e');
+    }
+  }
+
+  // Delete a transaction from Firestore
+  Future<void> deleteTransaction(String transactionId) async {
+    try {
+      await _firestore.collection('transactions').doc(transactionId).delete();
+      _transactions.removeWhere((transaction) => transaction.id == transactionId);
+      notifyListeners();
+    } catch (e) {
+      print('Error deleting transaction: $e');
+    }
   }
 }

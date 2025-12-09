@@ -1,37 +1,62 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/account.dart';
 
 class AccountProvider with ChangeNotifier {
-  // Hardcoded list of accounts
-  final List<Account> _accounts = [
-    Account(
-      name: 'Wallet',
-      balance: '\$400',
-      icon: Icons.account_balance_wallet,
-    ),
-    Account(
-      name: 'Card1',
-      balance: '\$2000',
-      icon: Icons.credit_card,
-    ),
-    Account(
-      name: 'Bank Account',
-      balance: '\$5000',
-      icon: Icons.account_balance,
-    ),
-  ];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Getter for accounts
-  List<Account> get accounts => [..._accounts];
+  // List to store accounts locally
+  List<Account> _accounts = [];
 
-  // Selected account
-  Account? _selectedAccount;
+  List<Account> get accounts => _accounts;
 
-  Account? get selectedAccount => _selectedAccount;
+  // Fetch all accounts from Firestore
+  Future<void> fetchAccounts() async {
+    try {
+      final snapshot = await _firestore.collection('accounts').get();
+      _accounts = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Account.fromFirestore(data);
+      }).toList();
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching accounts: $e');
+    }
+  }
 
-  // Set the selected account
-  void selectAccount(Account account) {
-    _selectedAccount = account;
-    notifyListeners();
+  // Add a new account to Firestore
+  Future<void> addAccount(Account account) async {
+    try {
+      await _firestore.collection('accounts').doc(account.id).set(account.toFirestore());
+      _accounts.add(account);
+      notifyListeners();
+    } catch (e) {
+      print('Error adding account: $e');
+    }
+  }
+
+  // Update an existing account in Firestore
+  Future<void> updateAccount(Account account) async {
+    try {
+      await _firestore.collection('accounts').doc(account.id).update(account.toFirestore());
+      final index = _accounts.indexWhere((a) => a.id == account.id);
+      if (index != -1) {
+        _accounts[index] = account;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error updating account: $e');
+    }
+  }
+
+  // Delete an account from Firestore
+  Future<void> deleteAccount(String accountId) async {
+    try {
+      await _firestore.collection('accounts').doc(accountId).delete();
+      _accounts.removeWhere((account) => account.id == accountId);
+      notifyListeners();
+    } catch (e) {
+      print('Error deleting account: $e');
+    }
   }
 }

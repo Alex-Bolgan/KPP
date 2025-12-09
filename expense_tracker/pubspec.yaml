@@ -41,6 +41,7 @@ dependencies:
   firebase_auth: ^6.1.0
   provider: ^6.0.5
   cloud_firestore: ^6.1.0
+  string_to_icon: ^1.0.0
 
 dev_dependencies:
   flutter_test:

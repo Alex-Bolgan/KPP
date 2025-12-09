@@ -1,11 +1,24 @@
-import 'package:expense_tracker/screens/account_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:string_to_icon/string_to_icon.dart';
 import '../models/account.dart';
 import '../providers/account_provider.dart';
+import 'account_detail_screen.dart';
 
-class AccountsScreen extends StatelessWidget {
+class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
+
+  @override
+  State<AccountsScreen> createState() => _AccountsScreenState();
+}
+
+class _AccountsScreenState extends State<AccountsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch accounts when the screen initializes
+    Provider.of<AccountProvider>(context, listen: false).fetchAccounts();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,77 +27,70 @@ class AccountsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Account'),
+        title: const Text('Accounts'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          Container(
-            color: const Color.fromARGB(255, 255, 255, 255),
-            padding: const EdgeInsets.all(20),
-            width: double.infinity,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: const [
-                Text(
-                  'Account Balance',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
+      body: accounts.isEmpty
+          ? const Center(child: Text('No accounts available'))
+          : Column(
+              children: [
+                Container(
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                  padding: const EdgeInsets.all(20),
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: const [
+                      Text(
+                        'Account Balance',
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        '\$9400',
+                        style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  '\$9400',
-                  style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: accounts.length,
+                    itemBuilder: (context, index) {
+                      final account = accounts[index];
+                      return _buildAccountTile(account, context);
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      print('Add new wallet button pressed');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      '+ Add new wallet',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Center(
-              child: ListView.builder(
-                shrinkWrap: true, // Ensures the list doesn't take up unnecessary space
-                itemCount: accounts.length,
-                itemBuilder: (context, index) {
-                  final account = accounts[index];
-                  return _buildAccountTile(
-                    account,
-                    context,
-                  );
-                },
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                print('Add new wallet button pressed');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: const Text(
-                '+ Add new wallet',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildAccountTile(Account account, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Use Provider to set the selected account and navigate
-        Provider.of<AccountProvider>(context, listen: false)
-            .selectAccount(account);
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -97,15 +103,15 @@ class AccountsScreen extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: Colors.purple.withAlpha(40),
-            child: Icon(account.icon, color: Colors.purple),
+            backgroundColor: Colors.blue.withAlpha(20),
+            child: Icon(IconMapper.getIconData(account.icon), color: Colors.blue),
           ),
           title: Text(
             account.name,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           trailing: Text(
-            account.balance,
+            '\$${account.balance.toStringAsFixed(2)}',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),

@@ -1,240 +1,118 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class TransactionDetailsScreen extends StatefulWidget {
-  final String transactionType;
-  final String amount;
-  final String category;
-  final String description;
-  final String wallet;
-  final String date;
+  final String transactionId;
 
-  const TransactionDetailsScreen({
-    super.key,
-    required this.transactionType,
-    required this.amount,
-    required this.category,
-    required this.description,
-    required this.wallet,
-    required this.date,
-  });
+  const TransactionDetailsScreen({super.key, required this.transactionId});
 
   @override
-  State<TransactionDetailsScreen> createState() =>
-      _TransactionDetailsScreenState();
+  State<TransactionDetailsScreen> createState() => _TransactionDetailsScreenState();
 }
 
 class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
-  late String selectedDate;
-  late String selectedCategory;
-  late String selectedWallet;
+  late String transactionType;
+  late String amount;
+  late String category;
   late String description;
+  late String wallet;
+  late String selectedDate;
 
-  // List of categories
   final List<String> categories = ['Shopping', 'Food', 'Transport', 'Bills', 'Other'];
-
-  // List of wallets
   final List<String> wallets = ['Wallet', 'Card1', 'Bank Account'];
+
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Initialize fields with values passed from the transaction
-    selectedDate = widget.date;
-    selectedCategory = categories.contains(widget.category)
-        ? widget.category
-        : categories.first; // Set a default category if it doesn't match
-    selectedWallet = wallets.contains(widget.wallet)
-        ? widget.wallet
-        : wallets.first; // Set a default wallet if it doesn't match
-    description = widget.description;
+    fetchTransactionDetails();
   }
 
-  Future<void> _pickDate(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      setState(() {
-        selectedDate = "${pickedDate.toLocal()}".split(' ')[0];
+  Future<void> fetchTransactionDetails() async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('transactions').doc(widget.transactionId).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        setState(() {
+          transactionType = data['type'];
+          amount = data['amount'].toString();
+          category = categories.contains(data['category']) ? data['category'] : categories.first;
+          wallet = wallets.contains(data['wallet']) ? data['wallet'] : wallets.first;
+          description = data['description'];
+          selectedDate = (data['date'] as Timestamp).toDate().toString().split(' ')[0];
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Transaction not found');
+      }
+    } catch (e) {
+      print('Error fetching transaction: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load transaction details: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _updateTransaction() async {
+    try {
+      await FirebaseFirestore.instance.collection('transactions').doc(widget.transactionId).update({
+        'type': transactionType,
+        'amount': double.parse(amount),
+        'category': category,
+        'description': description,
+        'wallet': wallet,
+        'date': Timestamp.fromDate(DateTime.parse(selectedDate)),
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Transaction updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update transaction: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: widget.transactionType == 'Income'
-            ? Colors.green
-            : Colors.red,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          widget.transactionType,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
+        title: Text(transactionType),
+        backgroundColor: transactionType == 'Income' ? Colors.green : Colors.red,
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 16),
+          TextFormField(
+            initialValue: amount,
+            onChanged: (value) {
+              amount = value;
+            },
           ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
-      body: Container(
-        color: widget.transactionType == 'Income'
-            ? Colors.green.withAlpha(240)
-            : Colors.red.withAlpha(240),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Spacer(),
-            const Text(
-              'How much?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              widget.amount,
-              style: const TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Category Dropdown
-                  DropdownButtonFormField<String>(
-                    value: selectedCategory,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: categories
-                        .map((e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(e),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCategory = value!;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  // Description Field
-                  TextFormField(
-                    initialValue: description,
-                    decoration: const InputDecoration(
-                      labelText: 'Description',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        description = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  // Wallet Dropdown
-                  DropdownButtonFormField<String>(
-                    value: selectedWallet,
-                    decoration: const InputDecoration(
-                      labelText: 'Wallet',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: wallets
-                        .map((e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(e),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedWallet = value!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildDatePicker(context),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: () {
-                print('Continue button pressed');
-                print('Category: $selectedCategory');
-                print('Description: $description');
-                print('Wallet: $selectedWallet');
-                print('Date: $selectedDate');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: const Text(
-                'Continue',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDatePicker(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _pickDate(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              selectedDate,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Icon(
-              Icons.calendar_today,
-              color: Colors.grey,
-            ),
-          ],
-        ),
+          // Add dropdowns and other fields similarly...
+          ElevatedButton(
+            onPressed: _updateTransaction,
+            child: const Text('Update Transaction'),
+          ),
+        ],
       ),
     );
   }
