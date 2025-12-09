@@ -1,5 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:string_to_icon/string_to_icon.dart';
+import '../models/account.dart';
+import '../providers/account_provider.dart';
 
 class AddAccountScreen extends StatefulWidget {
   const AddAccountScreen({super.key});
@@ -141,22 +145,31 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 final accountName = _accountNameController.text.trim();
                 final balance =
                     double.tryParse(_balanceController.text.trim()) ?? 0.0;
+                  
+                if (FirebaseAuth.instance.currentUser == null) {
+  print('Error: User is not authenticated.');
+  return;
+}
+                // Create an Account instance
+                final newAccount = Account(
+                  id: DateTime.now().toString(), // Generate unique ID
+                  name: accountName,
+                  balance: balance,
+                  icon: selectedIconName!, userId: FirebaseAuth.instance.currentUser!.uid, // Save the icon name
+                );
 
-                print('Account Details:');
-                print('Name: $accountName');
-                print('Balance: $balance');
-                print('Selected Icon Name: $selectedIconName');
+                // Add the account using the Provider
+                Provider.of<AccountProvider>(context, listen: false)
+                    .addAccount(newAccount);
 
-                // You can save the account details to Firestore or local storage here
-
-                // Navigate back or show a success message
-                Navigator.pop(context);
+                // Show success message and navigate back
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Account added successfully!'),
                     backgroundColor: Colors.green,
                   ),
                 );
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,

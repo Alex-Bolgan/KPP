@@ -42,7 +42,8 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
 
       // Use AccountProvider to fetch accounts
       final accountProvider = Provider.of<AccountProvider>(context, listen: false);
-      accounts = await accountProvider.fetchAccounts(user.uid);
+      await accountProvider.fetchAccounts(user.uid);
+      accounts = accountProvider.accounts;
 
       // Use TransactionProvider to fetch specific transaction
       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);

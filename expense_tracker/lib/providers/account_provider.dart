@@ -11,7 +11,7 @@ class AccountProvider with ChangeNotifier {
   List<Account> get accounts => _accounts;
 
   // Fetch all accounts for a specific user from Firestore
-  Future<List<Account>> fetchAccounts(String userId) async {
+  Future<void> fetchAccounts(String userId) async {
     try {
       final snapshot = await _firestore
           .collection('accounts')
@@ -23,10 +23,9 @@ class AccountProvider with ChangeNotifier {
         return Account.fromFirestore(data);
       }).toList();
       notifyListeners();
-      return _accounts;
     } catch (e) {
       print('Error fetching accounts: $e');
-      return [];
+      return;
     }
   }
 
