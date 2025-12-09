@@ -6,10 +6,24 @@ abstract class TransactionsRepository {
   Future<void> addTransaction(Transaction transaction);
   Future<void> updateTransaction(Transaction transaction);
   Future<void> deleteTransaction(String id);
+    Future<Transaction?> getTransactionById(String transactionId); // New method
 }
 
 class FirestoreTransactionsRepository implements TransactionsRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+   @override
+  Future<Transaction?> getTransactionById(String transactionId) async {
+    try {
+      final doc = await _firestore.collection('transactions').doc(transactionId).get();
+      if (doc.exists) {
+        return Transaction.fromFirestore(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to fetch transaction: $e');
+    }
+  }
 
   @override
   Future<List<Transaction>> getTransactions(String userId) async {

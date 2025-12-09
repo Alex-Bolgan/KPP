@@ -6,7 +6,8 @@ class Transaction {
   final double amount;
   final String category;
   final String description;
-  final String accountId;
+  final String accountId; // Account ID (reference to accounts collection)
+  final String accountName; // Wallet name fetched using accountId
   final DateTime date;
   final String icon;
   final String userId; // User ID to associate the transaction with a specific user
@@ -18,12 +19,13 @@ class Transaction {
     required this.category,
     required this.description,
     required this.accountId,
+    required this.accountName,
     required this.date,
     required this.icon,
     required this.userId,
   });
 
-  factory Transaction.fromFirestore(Map<String, dynamic> data) {
+  factory Transaction.fromFirestore(Map<String, dynamic> data, {String? walletName}) {
     return Transaction(
       id: data['id'],
       type: data['type'],
@@ -31,6 +33,7 @@ class Transaction {
       category: data['category'],
       description: data['description'],
       accountId: data['accountId'],
+      accountName: walletName ?? 'Unknown Wallet', // Wallet name fetched dynamically
       date: (data['date'] as Timestamp).toDate(),
       icon: data['icon'],
       userId: data['userId'],
