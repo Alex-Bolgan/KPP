@@ -5,15 +5,19 @@ import '../models/transaction.dart';
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // List to store transactions locally after fetching from Firestore
+  // List to store transactions locally
   List<Transaction> _transactions = [];
 
   List<Transaction> get transactions => _transactions;
 
-  // Fetch all transactions from Firestore
-  Future<void> fetchTransactions() async {
+  // Fetch all transactions for a specific user from Firestore
+  Future<void> fetchTransactions(String userId) async {
     try {
-      final snapshot = await _firestore.collection('transactions').get();
+      final snapshot = await _firestore
+          .collection('transactions')
+          .where('userId', isEqualTo: userId) // Filter transactions by userId
+          .get();
+
       _transactions = snapshot.docs.map((doc) {
         final data = doc.data();
         return Transaction.fromFirestore(data);
@@ -21,6 +25,20 @@ class TransactionProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print('Error fetching transactions: $e');
+    }
+  }
+
+  // Fetch a specific transaction by ID
+  Future<Transaction?> getTransactionById(String transactionId) async {
+    try {
+      final doc = await _firestore.collection('transactions').doc(transactionId).get();
+      if (doc.exists) {
+        return Transaction.fromFirestore(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching transaction by ID: $e');
+      return null;
     }
   }
 
@@ -58,5 +76,52 @@ class TransactionProvider with ChangeNotifier {
     } catch (e) {
       print('Error deleting transaction: $e');
     }
+  }
+
+  // Fetch transactions for a specific account
+  Future<void> fetchTransactionsForAccount(String accountId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('transactions')
+          .where('accountId', isEqualTo: accountId)
+          .get();
+
+      _transactions = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return Transaction.fromFirestore(data);
+      }).toList();
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching transactions: $e');
+    }
+  }
+
+  // Get filtered transactions based on the selected filter option
+  List<Transaction> getFilteredTransactions(String filterOption) {
+    final now = DateTime.now();
+    DateTime startDate;
+
+    switch (filterOption) {
+      case 'Today':
+        startDate = DateTime(now.year, now.month, now.day);
+        break;
+      case 'Week':
+        final weekDay = now.weekday; // Monday = 1, Sunday = 7
+        startDate = now.subtract(Duration(days: weekDay - 1)); // Start of the week (Monday)
+        break;
+      case 'Month':
+        startDate = DateTime(now.year, now.month);
+        break;
+      case 'Year':
+        startDate = DateTime(now.year);
+        break;
+      default:
+        startDate = DateTime(1970); // Default to fetch all transactions
+    }
+
+    // Filter transactions based on the startDate
+    return _transactions.where((transaction) {
+      return transaction.date.isAfter(startDate);
+    }).toList();
   }
 }

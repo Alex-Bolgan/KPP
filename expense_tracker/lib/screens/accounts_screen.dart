@@ -1,3 +1,5 @@
+import 'package:expense_tracker/screens/add_account_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:string_to_icon/string_to_icon.dart';
@@ -17,7 +19,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
   void initState() {
     super.initState();
     // Fetch accounts when the screen initializes
-    Provider.of<AccountProvider>(context, listen: false).fetchAccounts();
+    Provider.of<AccountProvider>(context, listen: false).fetchAccounts(FirebaseAuth.instance.currentUser!.uid);
   }
 
   @override
@@ -85,6 +87,22 @@ class _AccountsScreenState extends State<AccountsScreen> {
                 ),
               ],
             ),
+            floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddAccountScreen(),
+            ),
+          );
+        },
+        backgroundColor: Colors.purple,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Add Account',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 

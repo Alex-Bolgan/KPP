@@ -1,9 +1,10 @@
-import 'package:expense_tracker/models/account.dart';
-import 'package:expense_tracker/repositories/accounts_repository.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/transaction.dart';
-import '../repositories/transactions_repository.dart';
+import '../models/account.dart';
+import '../providers/transaction_provider.dart';
+import '../providers/account_provider.dart';
 
 class TransactionDetailsScreen extends StatefulWidget {
   final String transactionId;
@@ -15,9 +16,6 @@ class TransactionDetailsScreen extends StatefulWidget {
 }
 
 class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
-  final TransactionsRepository _repository = FirestoreTransactionsRepository();
-  final AccountsRepository accountsRepository = FirestoreAccountsRepository();
-
   late String transactionType;
   late String amount;
   late String category;
@@ -38,24 +36,31 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
 
   Future<void> fetchTransactionDetails() async {
     try {
+      // Get current user ID from Firebase Authentication
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('User not authenticated');
 
-      // Fetch accounts for the user
-      accounts = await accountsRepository.getAccounts(user.uid);
-        final transaction = await _repository.getTransactions('').then((transactions) {
-        return transactions.firstWhere((t) => t.id == widget.transactionId);
-      });
+      // Use AccountProvider to fetch accounts
+      final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+      accounts = await accountProvider.fetchAccounts(user.uid);
 
-      setState(() {
-        transactionType = transaction.type;
-        amount = transaction.amount.toString();
-        category = categories.contains(transaction.category) ? transaction.category : categories.first;
-        wallet = transaction.accountName;
-        description = transaction.description;
-        selectedDate = transaction.date.toString().split(' ')[0];
-        isLoading = false;
-      });
+      // Use TransactionProvider to fetch specific transaction
+      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+      final transaction = await transactionProvider.getTransactionById(widget.transactionId);
+
+      if (transaction != null) {
+        setState(() {
+          transactionType = transaction.type;
+          amount = transaction.amount.toString();
+          category = categories.contains(transaction.category) ? transaction.category : categories.first;
+          wallet = accounts.firstWhere((account) => account.id == transaction.accountId).name;
+          description = transaction.description;
+          selectedDate = transaction.date.toString().split(' ')[0];
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Transaction not found');
+      }
     } catch (e) {
       print('Error fetching transaction: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,22 +75,29 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
 
   Future<void> _updateTransaction() async {
     try {
-      final accountId = await accountsRepository.getAccounts('').then((accounts) {
-        return accounts.firstWhere((a) => a.name == wallet).id;
-      });
+      final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
 
-        final transaction = Transaction(
+      // Get account ID based on selected wallet name
+      final accountId = accounts.firstWhere((account) => account.name == wallet).id;
+
+      // Create updated transaction
+      final transaction = Transaction(
         id: widget.transactionId,
         type: transactionType,
         amount: double.parse(amount),
         category: category,
         description: description,
+        accountId: accountId,
         accountName: wallet,
         date: DateTime.parse(selectedDate),
-        icon: category, accountId: accountId, userId: FirebaseAuth.instance.currentUser!.uid,
+        icon: category,
+        userId: FirebaseAuth.instance.currentUser!.uid,
       );
 
-      await _repository.updateTransaction(transaction);
+      // Use TransactionProvider to update the transaction
+      await transactionProvider.updateTransaction(transaction);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Transaction updated successfully!'),
@@ -105,7 +117,11 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
 
   Future<void> _deleteTransaction() async {
     try {
-      await _repository.deleteTransaction(widget.transactionId);
+      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+
+      // Use TransactionProvider to delete the transaction
+      await transactionProvider.deleteTransaction(widget.transactionId);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Transaction deleted successfully!'),
@@ -144,7 +160,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(transactionType),
@@ -206,7 +222,12 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                 labelText: 'Wallet',
                 border: OutlineInputBorder(),
               ),
-              items: accounts.map((e) => DropdownMenuItem(value: e.name, child: Text(e.name))).toList(),
+              items: accounts.map((e) {
+                return DropdownMenuItem(
+                  value: e.name,
+                  child: Text(e.name),
+                );
+              }).toList(),
               onChanged: (value) {
                 setState(() {
                   wallet = value!;
@@ -245,7 +266,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                 ),
               ),
               child: const Text(
-                'Update',
+                'Update Transaction',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
