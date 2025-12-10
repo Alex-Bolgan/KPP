@@ -9,7 +9,6 @@ class CategoriesService {
     {'name': 'Entertainment', 'icon': Icons.movie, 'color': Colors.green},
     {'name': 'Health', 'icon': Icons.health_and_safety, 'color': Colors.teal},
     {'name': 'Education', 'icon': Icons.school, 'color': Colors.cyan},
-    {'name': 'Shopping', 'icon': Icons.shopping_bag, 'color': Colors.orange},
   ];
 
    static final List<Map<String, dynamic>> incomeCategories = [

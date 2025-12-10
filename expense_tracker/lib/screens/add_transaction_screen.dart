@@ -34,7 +34,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   void initState() {
     super.initState();
     fetchAccounts();
-    selectedCategory = expenseCategories.first['name']; // Default category for expense
   }
 
   Future<void> fetchAccounts() async {
@@ -123,6 +122,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ? incomeCategories.map((e) => e['name'] as String).toList()
         : expenseCategories.map((e) => e['name'] as String).toList();
 
+    // Ensure selectedCategory is always valid
+    if (!categories.contains(selectedCategory)) {
+      selectedCategory = categories.isNotEmpty ? categories.first : '';
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Transaction'),
@@ -145,10 +149,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               onChanged: (value) {
                 setState(() {
                   transactionType = value!;
-                  // Update categories and set default selected category
-                  selectedCategory = transactionType == 'Income'
-                      ? incomeCategories.first['name']
-                      : expenseCategories.first['name'];
                 });
               },
             ),
