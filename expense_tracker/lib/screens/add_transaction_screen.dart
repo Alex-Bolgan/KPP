@@ -1,3 +1,4 @@
+import 'package:expense_tracker/services/categories_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/transaction.dart';
@@ -17,11 +18,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final TransactionsRepository _transactionsRepository = FirestoreTransactionsRepository();
   final AccountsRepository _accountsRepository = FirestoreAccountsRepository();
 
-  final List<String> categories = ['Shopping', 'Food', 'Transport', 'Bills', 'Other'];
+  final List<Map<String, dynamic>> incomeCategories = CategoriesService.incomeCategories;
+  final List<Map<String, dynamic>> expenseCategories = CategoriesService.expenseCategories;
+
   List<Account> accounts = [];
   late String selectedWallet;
   String transactionType = 'Expense'; // Default is Expense
-  String selectedCategory = 'Shopping';
+  String selectedCategory = ''; // Will be dynamically set
   String description = '';
   String amount = '';
   String selectedDate = DateTime.now().toString().split(' ')[0];
@@ -31,15 +34,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   void initState() {
     super.initState();
     fetchAccounts();
+    selectedCategory = expenseCategories.first['name']; // Default category for expense
   }
 
   Future<void> fetchAccounts() async {
     try {
-      // Get current user ID from Firebase Authentication
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('User not authenticated');
 
-      // Fetch accounts for the user
       accounts = await _accountsRepository.getAccounts(user.uid);
 
       setState(() {
@@ -59,11 +61,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Future<void> _addTransaction() async {
     try {
-      // Get accountId based on selected wallet
       final accountId = accounts.firstWhere((account) => account.name == selectedWallet).id;
       var uuid = Uuid();
 
-      // Create new transaction
       final transaction = Transaction(
         id: uuid.v1(),
         type: transactionType,
@@ -119,6 +119,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       );
     }
 
+    final categories = transactionType == 'Income'
+        ? incomeCategories.map((e) => e['name'] as String).toList()
+        : expenseCategories.map((e) => e['name'] as String).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Transaction'),
@@ -141,6 +145,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               onChanged: (value) {
                 setState(() {
                   transactionType = value!;
+                  // Update categories and set default selected category
+                  selectedCategory = transactionType == 'Income'
+                      ? incomeCategories.first['name']
+                      : expenseCategories.first['name'];
                 });
               },
             ),
@@ -162,7 +170,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 labelText: 'Category',
                 border: OutlineInputBorder(),
               ),
-              items: categories.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              items: categories
+                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  .toList(),
               onChanged: (value) {
                 setState(() {
                   selectedCategory = value!;

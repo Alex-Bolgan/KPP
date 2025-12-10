@@ -1,4 +1,4 @@
-import 'package:expense_tracker/services/categories_service%20copy.dart';
+import 'package:expense_tracker/services/categories_service.dart';
 import 'package:flutter/material.dart';
 
 class CategoriesScreen extends StatelessWidget {
@@ -32,7 +32,7 @@ class CategoriesScreen extends StatelessWidget {
 class ExpenseCategoriesTab extends StatelessWidget {
   ExpenseCategoriesTab({super.key});
 
-    final List<Map<String, dynamic>> expenseCategories = CateogoriesService().expenseCategories;
+    final List<Map<String, dynamic>> expenseCategories = CategoriesService.expenseCategories;
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +82,7 @@ class ExpenseCategoriesTab extends StatelessWidget {
 class IncomeCategoriesTab extends StatelessWidget {
   IncomeCategoriesTab({super.key});
 
-  final List<Map<String, dynamic>> incomeCategories = CateogoriesService().incomeCategories;
+  final List<Map<String, dynamic>> incomeCategories = CategoriesService.incomeCategories;
 
   @override
   Widget build(BuildContext context) {
