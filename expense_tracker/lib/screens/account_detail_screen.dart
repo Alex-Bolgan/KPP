@@ -29,7 +29,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
   Future<void> fetchTransactions() async {
     try {
       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
-      final transactions = await transactionProvider.transactions;
+      final transactions = await transactionProvider.getTransactionsForAccount(widget.account.id);
       setState(() {
         _transactions = transactions;
         isLoading = false;

@@ -42,6 +42,15 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+   Future<List<Transaction>> getTransactionsForAccount(String accountId) async {
+    try {
+      return await _transactionsRepository.getTransactionsForAccount(accountId);
+    } catch (e) {
+      print('Error adding transaction: $e');
+      return List.empty();
+    }
+  }
+
   // Update an existing transaction
   Future<void> updateTransaction(Transaction transaction) async {
     try {

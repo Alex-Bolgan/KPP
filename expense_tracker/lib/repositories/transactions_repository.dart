@@ -26,7 +26,7 @@ class FirestoreTransactionsRepository implements TransactionsRepository {
     }
   }
 
-     @override
+  @override
   Future<List<Transaction>> getTransactionsForAccount(String accountId) async {
     try {
           final transactionSnapshot = await _firestore.collection('transactions')
