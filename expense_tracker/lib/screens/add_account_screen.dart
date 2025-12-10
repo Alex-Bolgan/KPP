@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:string_to_icon/string_to_icon.dart';
+import 'package:uuid/uuid.dart';
 import '../models/account.dart';
 import '../providers/account_provider.dart';
 
@@ -147,12 +148,14 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     double.tryParse(_balanceController.text.trim()) ?? 0.0;
                   
                 if (FirebaseAuth.instance.currentUser == null) {
-  print('Error: User is not authenticated.');
-  return;
-}
+                  print('Error: User is not authenticated.');
+                  return;
+                }
+
+                final uuid = Uuid();
                 // Create an Account instance
                 final newAccount = Account(
-                  id: DateTime.now().toString(), // Generate unique ID
+                  id: uuid.v4(), // Generate unique ID
                   name: accountName,
                   balance: balance,
                   icon: selectedIconName!, userId: FirebaseAuth.instance.currentUser!.uid, // Save the icon name

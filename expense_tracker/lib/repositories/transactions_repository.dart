@@ -6,7 +6,8 @@ abstract class TransactionsRepository {
   Future<void> addTransaction(Transaction transaction);
   Future<void> updateTransaction(Transaction transaction);
   Future<void> deleteTransaction(String id);
-    Future<Transaction?> getTransactionById(String transactionId); // New method
+  Future<Transaction?> getTransactionById(String transactionId); // New method
+  Future<List<Transaction>> getTransactionsForAccount(String transactionId);
 }
 
 class FirestoreTransactionsRepository implements TransactionsRepository {
@@ -22,6 +23,35 @@ class FirestoreTransactionsRepository implements TransactionsRepository {
       return null;
     } catch (e) {
       throw Exception('Failed to fetch transaction: $e');
+    }
+  }
+
+     @override
+  Future<List<Transaction>> getTransactionsForAccount(String accountId) async {
+    try {
+          final transactionSnapshot = await _firestore.collection('transactions')
+          .where('accountId', isEqualTo: accountId)
+          .get();
+          if (transactionSnapshot.docs.isEmpty) return [];
+
+        // Fetch wallet names for each transaction
+        List<Transaction> transactions = [];
+
+        for (var doc in transactionSnapshot.docs) {
+          final data = doc.data();
+          final accountId = data['accountId'];
+
+          // Fetch wallet (account) name from the accounts collection
+          final accountDoc = await _firestore.collection('accounts').doc(accountId).get();
+          final walletName = accountDoc.exists ? accountDoc.data()!['name'] : 'Unknown Wallet';
+
+          // Create transaction with wallet name
+          transactions.add(Transaction.fromFirestore(data, walletName: walletName));
+        }
+
+      return transactions;
+    } catch (e) {
+      throw Exception('Failed to fetch transactions: $e');
     }
   }
 

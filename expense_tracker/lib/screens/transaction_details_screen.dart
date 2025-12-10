@@ -1,3 +1,4 @@
+import 'package:expense_tracker/services/categories_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,7 +24,8 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
   late String wallet;
   late String selectedDate;
 
-  final List<String> categories = ['Shopping', 'Food', 'Transport', 'Bills', 'Other'];
+  final List<Map<String, dynamic>> incomeCategories = CategoriesService.incomeCategories;
+  final List<Map<String, dynamic>> expenseCategories = CategoriesService.expenseCategories;
   List<Account> accounts = [];
 
   bool isLoading = true;
@@ -53,7 +55,7 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
         setState(() {
           transactionType = transaction.type;
           amount = transaction.amount.toString();
-          category = categories.contains(transaction.category) ? transaction.category : categories.first;
+          category = transaction.category;
           wallet = accounts.firstWhere((account) => account.id == transaction.accountId).name;
           description = transaction.description;
           selectedDate = transaction.date.toString().split(' ')[0];
@@ -76,7 +78,6 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
 
   Future<void> _updateTransaction() async {
     try {
-      final accountProvider = Provider.of<AccountProvider>(context, listen: false);
       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
 
       // Get account ID based on selected wallet name
@@ -161,6 +162,10 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+
+     final categories = transactionType == 'Income'
+        ? incomeCategories.map((e) => e['name'] as String).toList()
+        : expenseCategories.map((e) => e['name'] as String).toList();
 
     return Scaffold(
       appBar: AppBar(

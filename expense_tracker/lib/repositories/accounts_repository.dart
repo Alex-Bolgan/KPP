@@ -28,6 +28,8 @@ class FirestoreAccountsRepository implements AccountsRepository {
 
   @override
   Future<List<Account>> getAccounts(String userId) async {
+    print('======================USERID: $userId');
+
     final snapshot = await _firestore
         .collection('accounts')
         .where('userId', isEqualTo: userId)

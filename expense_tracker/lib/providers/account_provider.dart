@@ -1,52 +1,40 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/account.dart';
+import '../repositories/accounts_repository.dart';
 
 class AccountProvider with ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AccountsRepository _accountsRepository;
 
-  // List to store accounts locally
+  AccountProvider(this._accountsRepository);
+
   List<Account> _accounts = [];
 
   List<Account> get accounts => _accounts;
 
-  // Fetch all accounts for a specific user from Firestore
+  // Fetch all accounts for a specific user
   Future<void> fetchAccounts(String userId) async {
     try {
-      final snapshot = await _firestore
-          .collection('accounts')
-          .where('userId', isEqualTo: userId) // Filter accounts by userId
-          .get();
-
-      _accounts = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return Account.fromFirestore(data);
-      }).toList();
+      _accounts = await _accountsRepository.getAccounts(userId);
       notifyListeners();
     } catch (e) {
       print('Error fetching accounts: $e');
-      return;
     }
   }
 
   // Fetch a specific account by ID
   Future<Account?> getAccountById(String accountId) async {
     try {
-      final doc = await _firestore.collection('accounts').doc(accountId).get();
-      if (doc.exists) {
-        return Account.fromFirestore(doc.data()!);
-      }
-      return null;
+      return await _accountsRepository.getAccountById(accountId);
     } catch (e) {
       print('Error fetching account by ID: $e');
       return null;
     }
   }
 
-  // Add a new account to Firestore
+  // Add a new account
   Future<void> addAccount(Account account) async {
     try {
-      await _firestore.collection('accounts').doc(account.id).set(account.toFirestore());
+      await _accountsRepository.addAccount(account);
       _accounts.add(account);
       notifyListeners();
     } catch (e) {
@@ -54,10 +42,10 @@ class AccountProvider with ChangeNotifier {
     }
   }
 
-  // Update an existing account in Firestore
+  // Update an existing account
   Future<void> updateAccount(Account account) async {
     try {
-      await _firestore.collection('accounts').doc(account.id).update(account.toFirestore());
+      await _accountsRepository.updateAccount(account);
       final index = _accounts.indexWhere((a) => a.id == account.id);
       if (index != -1) {
         _accounts[index] = account;
@@ -68,10 +56,10 @@ class AccountProvider with ChangeNotifier {
     }
   }
 
-  // Delete an account from Firestore
+  // Delete an account
   Future<void> deleteAccount(String accountId) async {
     try {
-      await _firestore.collection('accounts').doc(accountId).delete();
+      await _accountsRepository.deleteAccount(accountId);
       _accounts.removeWhere((account) => account.id == accountId);
       notifyListeners();
     } catch (e) {

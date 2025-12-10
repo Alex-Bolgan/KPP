@@ -71,7 +71,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
                     onPressed: () {
-                      print('Add new wallet button pressed');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddAccountScreen(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple,
@@ -80,29 +85,13 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       ),
                     ),
                     child: const Text(
-                      '+ Add new wallet',
+                      '+ Add new account',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
               ],
             ),
-            floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddAccountScreen(),
-            ),
-          );
-        },
-        backgroundColor: Colors.purple,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Add Account',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
     );
   }
 
