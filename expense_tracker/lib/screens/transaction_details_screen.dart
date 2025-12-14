@@ -1,95 +1,140 @@
 import 'package:expense_tracker/services/categories_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/transaction.dart';
 import '../models/account.dart';
-import '../repositories/transactions_repository.dart';
-import '../repositories/accounts_repository.dart';
-import 'package:uuid/uuid.dart';
+import '../providers/transaction_provider.dart';
+import '../providers/account_provider.dart';
 
-class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+class TransactionDetailsScreen extends StatefulWidget {
+  final String transactionId;
+
+  const TransactionDetailsScreen({super.key, required this.transactionId});
 
   @override
-  State<AddTransactionScreen> createState() => _AddTransactionScreenState();
+  State<TransactionDetailsScreen> createState() => _TransactionDetailsScreenState();
 }
 
-class _AddTransactionScreenState extends State<AddTransactionScreen> {
-  final TransactionsRepository _transactionsRepository = FirestoreTransactionsRepository();
-  final AccountsRepository _accountsRepository = FirestoreAccountsRepository();
+class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
+  late String transactionType;
+  late String amount;
+  late String category;
+  late String description;
+  late String wallet;
+  late String selectedDate;
 
   final List<Map<String, dynamic>> incomeCategories = CategoriesService.incomeCategories;
   final List<Map<String, dynamic>> expenseCategories = CategoriesService.expenseCategories;
-
   List<Account> accounts = [];
-  late String selectedWallet;
-  String transactionType = 'Expense'; // Default is Expense
-  String selectedCategory = ''; // Will be dynamically set
-  String description = '';
-  String amount = '';
-  String selectedDate = DateTime.now().toString().split(' ')[0];
+
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchAccounts();
+    fetchTransactionDetails();
   }
 
-  Future<void> fetchAccounts() async {
+  Future<void> fetchTransactionDetails() async {
     try {
+      // Get current user ID from Firebase Authentication
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('User not authenticated');
 
-      accounts = await _accountsRepository.getAccounts(user.uid);
+      // Use AccountProvider to fetch accounts
+      final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+      await accountProvider.fetchAccounts(user.uid);
+      accounts = accountProvider.accounts;
 
-      setState(() {
-        selectedWallet = accounts.isNotEmpty ? accounts.first.name : 'No Wallet';
-        isLoading = false;
-      });
+      // Use TransactionProvider to fetch specific transaction
+      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+      final transaction = await transactionProvider.getTransactionById(widget.transactionId);
+
+      if (transaction != null) {
+        setState(() {
+          transactionType = transaction.type;
+          amount = transaction.amount.toString();
+          category = transaction.category;
+          wallet = accounts.firstWhere((account) => account.id == transaction.accountId).name;
+          description = transaction.description;
+          selectedDate = transaction.date.toString().split(' ')[0];
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Transaction not found');
+      }
     } catch (e) {
-      print('Error fetching accounts: $e');
+      print('Error fetching transaction: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to load accounts: $e'),
+          content: Text('Failed to load transaction details: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _updateTransaction() async {
+    try {
+      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+
+      // Get account ID based on selected wallet name
+      final accountId = accounts.firstWhere((account) => account.name == wallet).id;
+
+      // Create updated transaction
+      final transaction = Transaction(
+        id: widget.transactionId,
+        type: transactionType,
+        amount: double.parse(amount),
+        category: category,
+        description: description,
+        accountId: accountId,
+        accountName: wallet,
+        date: DateTime.parse(selectedDate),
+        icon: category,
+        userId: FirebaseAuth.instance.currentUser!.uid,
+      );
+
+      // Use TransactionProvider to update the transaction
+      await transactionProvider.updateTransaction(transaction);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Transaction updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update transaction: $e'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
 
-  Future<void> _addTransaction() async {
+  Future<void> _deleteTransaction() async {
     try {
-      final accountId = accounts.firstWhere((account) => account.name == selectedWallet).id;
-      var uuid = Uuid();
+      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
 
-      final transaction = Transaction(
-        id: uuid.v1(),
-        type: transactionType,
-        amount: double.parse(amount),
-        category: selectedCategory,
-        description: description,
-        accountId: accountId,
-        accountName: selectedWallet,
-        date: DateTime.parse(selectedDate),
-        icon: selectedCategory,
-        userId: FirebaseAuth.instance.currentUser!.uid,
-      );
-
-      await _transactionsRepository.addTransaction(transaction);
+      // Use TransactionProvider to delete the transaction
+      await transactionProvider.deleteTransaction(widget.transactionId);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Transaction added successfully!'),
+          content: Text('Transaction deleted successfully!'),
           backgroundColor: Colors.green,
         ),
       );
       Navigator.of(context).pop();
     } catch (e) {
-      print('Error adding transaction: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to add transaction: $e'),
+          content: Text('Failed to delete transaction: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -118,42 +163,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       );
     }
 
-    final categories = transactionType == 'Income'
+     final categories = transactionType == 'Income'
         ? incomeCategories.map((e) => e['name'] as String).toList()
         : expenseCategories.map((e) => e['name'] as String).toList();
 
-    // Ensure selectedCategory is always valid
-    if (!categories.contains(selectedCategory)) {
-      selectedCategory = categories.isNotEmpty ? categories.first : '';
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Transaction'),
-        backgroundColor: Colors.purple,
+        title: Text(transactionType),
+        backgroundColor: transactionType == 'Income' ? Colors.green : Colors.red,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () async {
+              await _deleteTransaction();
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: transactionType,
-              decoration: const InputDecoration(
-                labelText: 'Transaction Type',
-                border: OutlineInputBorder(),
-              ),
-              items: ['Income', 'Expense']
-                  .map((type) => DropdownMenuItem(value: type, child: Text(type)))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  transactionType = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
             TextFormField(
+              initialValue: amount,
               decoration: const InputDecoration(
                 labelText: 'Amount',
                 border: OutlineInputBorder(),
@@ -165,22 +198,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: selectedCategory,
+              value: category,
               decoration: const InputDecoration(
                 labelText: 'Category',
                 border: OutlineInputBorder(),
               ),
-              items: categories
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+              items: categories.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
               onChanged: (value) {
                 setState(() {
-                  selectedCategory = value!;
+                  category = value!;
                 });
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
+              initialValue: description,
               decoration: const InputDecoration(
                 labelText: 'Description',
                 border: OutlineInputBorder(),
@@ -191,20 +223,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: selectedWallet,
+              value: wallet,
               decoration: const InputDecoration(
                 labelText: 'Wallet',
                 border: OutlineInputBorder(),
               ),
-              items: accounts.map((account) {
+              items: accounts.map((e) {
                 return DropdownMenuItem(
-                  value: account.name,
-                  child: Text(account.name),
+                  value: e.name,
+                  child: Text(e.name),
                 );
               }).toList(),
               onChanged: (value) {
                 setState(() {
-                  selectedWallet = value!;
+                  wallet = value!;
                 });
               },
             ),
@@ -232,7 +264,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _addTransaction,
+              onPressed: _updateTransaction,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
                 shape: RoundedRectangleBorder(
@@ -240,7 +272,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 ),
               ),
               child: const Text(
-                'Add Transaction',
+                'Update Transaction',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

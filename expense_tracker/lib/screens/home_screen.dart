@@ -1,11 +1,39 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/utilities/app_strings.dart';
+import 'package:provider/provider.dart';
+import 'package:string_to_icon/string_to_icon.dart';
+import '../providers/transaction_provider.dart';
+import '../models/transaction.dart';
+import 'transaction_details_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final List<String> filterOptions = ["Today", "Week", "Month", "Year"];
+  int selectedFilterIndex = 0; // Default to "Today"
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch transactions when screen initializes
+    Provider.of<TransactionProvider>(context, listen: false)
+        .fetchTransactions(FirebaseAuth.instance.currentUser!.uid);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final transactionProvider = Provider.of<TransactionProvider>(context);
+
+    // Filter transactions based on the selected filter option
+    final transactions = transactionProvider.getFilteredTransactions(
+      filterOptions[selectedFilterIndex],
+    );
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.amber[50],
@@ -23,7 +51,7 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: Container(
-        color: Colors.amber[50], // Background color
+        color: Colors.amber[50],
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +75,9 @@ class HomeScreen extends StatelessWidget {
                 _buildCard('Expenses', '\$1200', const Color.fromARGB(255, 159, 13, 3)),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            _buildFilterRow(),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -73,33 +103,26 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildTransactionTile(
-                    title: 'Shopping',
-                    subtitle: 'Buy some groceries',
-                    amount: '-\$120',
-                    color: Colors.red,
-                    icon: Icons.shopping_cart,
+            // Check if transactions are available
+            transactions.isEmpty
+                ? const Expanded(
+                    child: Center(
+                      child: Text('No transactions available.'),
+                    ),
+                  )
+                : Expanded(
+                    child: ListView.builder(
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = transactions[index];
+                        return _buildTransactionTile(
+                          transaction,
+                          context,
+                          IconMapper.getIconData(transaction.icon),
+                        );
+                      },
+                    ),
                   ),
-                  _buildTransactionTile(
-                    title: 'Food',
-                    subtitle: 'Dinner',
-                    amount: '-\$32',
-                    color: Colors.orange,
-                    icon: Icons.fastfood,
-                  ),
-                  _buildTransactionTile(
-                    title: 'Salary',
-                    subtitle: 'Monthly income',
-                    amount: '+\$2000',
-                    color: Colors.green,
-                    icon: Icons.attach_money,
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -111,7 +134,7 @@ class HomeScreen extends StatelessWidget {
       width: 150,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.8),
+        color: color.withAlpha(200),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -120,21 +143,21 @@ class HomeScreen extends StatelessWidget {
           Row(
             children: [
               Icon(
-                title == 'Income' ? Icons.arrow_upward : Icons.arrow_downward,
-                color: color,
+                title == 'Income' ? Icons.arrow_downward : Icons.arrow_upward,
+                color: Colors.white,
               ),
               const SizedBox(width: 8),
               Text(
                 title,
-                style: TextStyle(color: color, fontSize: 16),
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             amount,
-            style: TextStyle(
-              color: color,
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
@@ -144,25 +167,82 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildFilterRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: List.generate(
+        filterOptions.length,
+        (index) {
+          final isSelected = index == selectedFilterIndex;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                selectedFilterIndex = index;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color.fromARGB(255, 255, 223, 186)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                filterOptions[index],
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.orange : Colors.grey,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildTransactionTile(
-      {required String title,
-      required String subtitle,
-      required String amount,
-      required Color color,
-      required IconData icon}) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.1),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: Text(
-          amount,
-          style: TextStyle(color: color, fontWeight: FontWeight.bold),
+      Transaction transaction, BuildContext context, IconData icon) {
+    return GestureDetector(
+      onTap: () {
+        try {        
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TransactionDetailsScreen(
+                transactionId: transaction.id,
+              ),
+            ),
+          );
+        } catch (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to open transaction details: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Card(
+        elevation: 2,
+        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: transaction.type == 'Income'
+                ? Colors.green.withAlpha(30)
+                : Colors.red.withAlpha(30),
+            child: Icon(icon),
+          ),
+          title: Text(transaction.category),
+          subtitle: Text(transaction.description),
+          trailing: Text(
+            transaction.amount.toString(),
+            style: TextStyle(
+              color: transaction.type == 'Income' ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
     );

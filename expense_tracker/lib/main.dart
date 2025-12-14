@@ -1,7 +1,12 @@
+import 'package:expense_tracker/providers/account_provider.dart';
+import 'package:expense_tracker/providers/transaction_provider.dart';
+import 'package:expense_tracker/repositories/accounts_repository.dart';
+import 'package:expense_tracker/repositories/transactions_repository.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:expense_tracker/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:provider/provider.dart';
 
 
 void main() async {
@@ -10,7 +15,16 @@ void main() async {
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   await FirebaseCrashlytics.instance
       .setCrashlyticsCollectionEnabled(true);
-  runApp(MyApp());
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TransactionProvider(new FirestoreTransactionsRepository())),
+        ChangeNotifierProvider(create: (_) => AccountProvider(new FirestoreAccountsRepository())),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

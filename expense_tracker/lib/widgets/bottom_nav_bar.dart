@@ -17,16 +17,26 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   final List<Widget> _pages = [
     const HomeScreen(),
-    const CategoriesScreen(),
-    const AddTransactionScreen(),
-    const AccountsScreen(),
+    CategoriesScreen(),
+    const SizedBox(), // Placeholder for AddTransactionScreen
+    AccountsScreen(),
     const ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index == 2) {
+      // Navigate to AddTransactionScreen on add_circle tap
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AddTransactionScreen(),
+        ),
+      );
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   @override
