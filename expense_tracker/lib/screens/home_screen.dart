@@ -118,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return _buildTransactionTile(
                           transaction,
                           context,
-                          IconMapper.getIconData(transaction.icon),
+                          StringToIcon.fromString(transaction.icon)!,
                         );
                       },
                     ),

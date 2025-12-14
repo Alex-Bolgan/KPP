@@ -165,7 +165,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
                   CircleAvatar(
                     backgroundColor: Colors.blue.withAlpha(20),
                     radius: 50,
-                    child: Icon(IconMapper.getIconData(widget.account.icon), size: 40, color: Colors.blue),
+                    child: Icon(StringToIcon.fromString(widget.account.icon), size: 40, color: Colors.blue),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -220,7 +220,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
             backgroundColor: transaction.type == 'Income'
                 ? Colors.green.withAlpha(20)
                 : Colors.red.withAlpha(20),
-            child: Icon(IconMapper.getIconData(transaction.icon), color: transaction.type == 'Income' ? Colors.green : Colors.red),
+            child: Icon(StringToIcon.fromString(transaction.icon), color: transaction.type == 'Income' ? Colors.green : Colors.red),
           ),
           title: Text(transaction.category),
           subtitle: Text(transaction.description),

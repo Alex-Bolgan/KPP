@@ -111,7 +111,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
         child: ListTile(
           leading: CircleAvatar(
             backgroundColor: Colors.blue.withAlpha(20),
-            child: Icon(IconMapper.getIconData(account.icon), color: Colors.blue),
+            child: Icon(StringToIcon.fromString(account.icon), color: Colors.blue),
           ),
           title: Text(
             account.name,

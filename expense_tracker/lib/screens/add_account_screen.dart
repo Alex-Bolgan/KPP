@@ -18,8 +18,21 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   final TextEditingController _balanceController = TextEditingController();
 
   // Get all icon names from Material Icons using StringToIcon package
-  final List<String> availableIconNames = IconMapper.getSupportedIconNames();
-  String? selectedIconName; // To store the name of the selected icon
+  final List<String> availableIconNames = ([
+      'account_balance',
+      'account_circle',
+      'account_box',
+      'credit_card',
+      'savings',
+      'wallet_giftcard',
+      'monetization_on',
+      'attach_money',
+      'payment',
+      'account_balance_wallet',
+    ]).toList();
+
+
+  String? selectedIconName; // To store the 1name of the selected icon
 
   @override
   void initState() {
@@ -101,7 +114,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                     itemCount: availableIconNames.length,
                     itemBuilder: (context, index) {
                       final iconName = availableIconNames[index];
-                      final iconData = IconMapper.getIconData(iconName);
+                      final iconData = StringToIcon.fromString(iconName);
 
                       return GestureDetector(
                         onTap: () {
