@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/services/auth_service.dart';
-import 'package:expense_tracker/utilities/app_strings.dart';
+import 'package:expense_tracker/widgets/app_strings.dart';
 
 class RegistrationScreen extends StatelessWidget {
   RegistrationScreen({super.key});
